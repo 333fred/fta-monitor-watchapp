@@ -1,5 +1,6 @@
 #include <pebble.h>
 #include "utility.h"
+#include "text.h"
   
 #define RED1_STATUS 1
 #define RED2_STATUS 2
@@ -20,75 +21,23 @@
         t = dict_read_next(iter); \
         continue; \
 }
-  
-// Constant text strings for the connection statuses
-const char *eth = "Eth", *ds = "DS", *radio = "Rd", *rio = "RIO", *code = "Cd", *estop = "Est", *good = "G", *bwu = "BWU", *byp = "BYP";
-  
+
 static Window *s_main_window;
 static Layer *s_grid_layer;
-static TextLayer *s_red_header;
-static TextLayer *s_blue_header;
-static TextLayer *s_red1;
-static TextLayer *s_red2;
-static TextLayer *s_red3;
-static TextLayer *s_blue1;
-static TextLayer *s_blue2;
-static TextLayer *s_blue3;
-static GFont *s_source_code_pro;
-static int s_red1_num = 4;
-static int s_red2_num = 5;
-static int s_red3_num = 6;
-static int s_blue1_num = 1;
-static int s_blue2_num = 2;
-static int s_blue3_num = 3;
-static int s_show_team_nums = 0;
+int s_red1_num = 4;
+int s_red2_num = 5;
+int s_red3_num = 6;
+int s_blue1_num = 1;
+int s_blue2_num = 2;
+int s_blue3_num = 3;
+int s_show_team_nums = 0;
 
-static char *s_red1_text;
-static char *s_red2_text;
-static char *s_red3_text;
-static char *s_blue1_text;
-static char *s_blue2_text;
-static char *s_blue3_text;
-
-typedef enum {
-  ETH=0, DS=1, RADIO=2, RIO=3, CODE=4, ESTOP=5, GOOD=6, BWU=7, BYP = 8
-} status_type;
-
-static status_type s_red1_status = 0;
-static status_type s_red2_status = 0;
-static status_type s_red3_status = 0;
-static status_type s_blue1_status = 0;
-static status_type s_blue2_status = 0;
-static status_type s_blue3_status = 0;
-
-void set_alliance_text(const char *text, bool hi_contrast, uint8_t alliance, uint8_t team);
-void set_alliance_status(status_type status, uint8_t alliance, uint8_t team);
-
-// Updates the text on the screen with the current values. It uses the correct display whether
-// the current update type is status or team number.
-void update_text() {
-  if (s_show_team_nums) {
-    snprintf(s_red1_text, 5, "%d", s_red1_num);
-    snprintf(s_red2_text, 5, "%d", s_red2_num);
-    snprintf(s_red3_text, 5, "%d", s_red3_num);
-    snprintf(s_blue1_text, 5, "%d", s_blue1_num);
-    snprintf(s_blue2_text, 5, "%d", s_blue2_num);
-    snprintf(s_blue3_text, 5, "%d", s_blue3_num);
-    set_alliance_text(s_red1_text, false, 1, 1);
-    set_alliance_text(s_red2_text, false, 1, 2);
-    set_alliance_text(s_red3_text, false, 1, 3);
-    set_alliance_text(s_blue1_text, false, 2, 1);
-    set_alliance_text(s_blue2_text, false, 2, 2);
-    set_alliance_text(s_blue3_text, false, 2, 3);
-  } else {
-    set_alliance_status(s_red1_status, 1, 1);
-    set_alliance_status(s_red2_status, 1, 2);
-    set_alliance_status(s_red3_status, 1, 3);
-    set_alliance_status(s_blue1_status, 2, 1);
-    set_alliance_status(s_blue2_status, 2, 2);
-    set_alliance_status(s_blue3_status, 2, 3);
-  }
-}
+status_type s_red1_status = 0;
+status_type s_red2_status = 0;
+status_type s_red3_status = 0;
+status_type s_blue1_status = 0;
+status_type s_blue2_status = 0;
+status_type s_blue3_status = 0;
 
 // Callback for receiving a message
 static void inbox_received_callback(DictionaryIterator *iter, void *ctx) {
@@ -181,78 +130,6 @@ static void canvas_update_proc(Layer *this_layer, GContext *ctx) {
   graphics_draw_line(ctx, GPoint(0, 112), GPoint(144, 112));
 }
 
-// Sets the alliance text to be the given text string for the given alliance and team.
-void set_alliance_text(const char *text, bool hi_contrast, uint8_t alliance, uint8_t team) {
-  uint16_t switch_mult = (alliance << 8) | team;
-  TextLayer *team_layer;
-  switch (switch_mult) {
-    case 0x0101:
-    team_layer = s_red1;
-    break;
-    case 0x0102:
-    team_layer = s_red2;
-    break;
-    case 0x0103:
-    team_layer = s_red3;
-    break;
-    case 0x0201:
-    team_layer = s_blue1;
-    break;
-    case 0x0202:
-    team_layer = s_blue2;
-    break;
-    case 0x0203:
-    team_layer = s_blue3;
-    break;
-    default:
-    return;
-  }
- 
-  text_layer_set_text(team_layer, text);
-  if (hi_contrast) {
-    text_layer_set_background_color(team_layer, GColorBlack);
-    text_layer_set_text_color(team_layer, GColorWhite);
-  } else {
-    text_layer_set_background_color(team_layer, GColorWhite);
-    text_layer_set_text_color(team_layer, GColorBlack);
-  }
-}
-
-// Sets the status of an alliance based on the given status type
-void set_alliance_status(status_type status, uint8_t alliance, uint8_t team) {
-  // If the app has told us to vibrate, then vibrate
-  if (s_show_team_nums) return;
-  switch (status) {
-    case ETH:
-    set_alliance_text(eth, true, alliance, team);
-    break;
-    case DS:
-    set_alliance_text(ds, true, alliance, team);
-    break;
-    case RADIO:
-    set_alliance_text(radio, true, alliance, team);
-    break;
-    case RIO:
-    set_alliance_text(rio, true, alliance, team);
-    break;
-    case CODE:
-    set_alliance_text(code, true, alliance, team);
-    break;
-    case ESTOP:
-    set_alliance_text(estop, true, alliance, team);
-    break;
-    case GOOD:
-    set_alliance_text(good, false, alliance, team);
-    break;
-    case BWU:
-    set_alliance_text(bwu, true, alliance, team);
-    break;
-    case BYP:
-    set_alliance_text(byp, false, alliance, team);
-    break;
-  }
-}
-
 // Down click handler - shows the team numbers for 3 seconds.
 static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
   s_show_team_nums = !s_show_team_nums;
@@ -263,13 +140,6 @@ static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
 void config_provider(Window *window) {
   window_single_click_subscribe(BUTTON_ID_SELECT, select_single_click_handler);
   window_single_click_subscribe(BUTTON_ID_DOWN, down_click_handler);
-}
-
-void setup_alliance_textlayer(TextLayer **layer, Layer *parent, int x, int y) {
-  *layer = text_layer_create(GRect(x, y, 74, 46));
-  text_layer_set_text_alignment(*layer, GTextAlignmentCenter);
-  text_layer_set_font(*layer, s_source_code_pro);
-  layer_add_child(parent, text_layer_get_layer(*layer));
 }
 
 static void main_window_load(Window *window) {
@@ -283,58 +153,16 @@ static void main_window_load(Window *window) {
   // Set the grid drawing update procedure
   layer_set_update_proc(s_grid_layer, canvas_update_proc);
   
-  // Draw the Red and Blue text for the alliance headers
-  s_red_header = text_layer_create(GRect(74, 0, 74, 20));
-  s_blue_header = text_layer_create(GRect(0, 0, 74, 20));
-  text_layer_set_background_color(s_red_header, GColorClear);
-  text_layer_set_background_color(s_blue_header, GColorClear);
-  text_layer_set_text_color(s_red_header, GColorBlack);
-  text_layer_set_text_color(s_blue_header, GColorBlack);
-  text_layer_set_text_alignment(s_red_header, GTextAlignmentCenter);
-  text_layer_set_text_alignment(s_blue_header, GTextAlignmentCenter);
-  text_layer_set_font(s_red_header, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
-  text_layer_set_font(s_blue_header, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
-  text_layer_set_text(s_red_header, "Red");
-  text_layer_set_text(s_blue_header, "Blue");
-  layer_add_child(window_layer, text_layer_get_layer(s_red_header));
-  layer_add_child(window_layer, text_layer_get_layer(s_blue_header));
-  
-  // Create the layers for the different alliance statuses
-  
-  setup_alliance_textlayer(&s_red1, window_layer, 74, 112);
-  setup_alliance_textlayer(&s_red2, window_layer, 74, 66);
-  setup_alliance_textlayer(&s_red3, window_layer, 74, 20);
-  setup_alliance_textlayer(&s_blue1, window_layer, 0, 20);
-  setup_alliance_textlayer(&s_blue2, window_layer, 0, 66);
-  setup_alliance_textlayer(&s_blue3, window_layer, 0, 112);
-  set_alliance_status(ETH, 1, 1);
-  set_alliance_status(ETH, 1, 2);
-  set_alliance_status(ETH, 1, 3);
-  set_alliance_status(ETH, 2, 1);
-  set_alliance_status(ETH, 2, 2);
-  set_alliance_status(ETH, 2, 3);
+  setup_text_window_load(window_layer);
 }
 
 static void main_window_unload(Window *window) {
   layer_destroy(s_grid_layer);
-  text_layer_destroy(s_red_header);
-  text_layer_destroy(s_blue_header);
-  text_layer_destroy(s_red1);
-  text_layer_destroy(s_red2);
-  text_layer_destroy(s_red3);
-  text_layer_destroy(s_blue1);
-  text_layer_destroy(s_blue2);
-  text_layer_destroy(s_blue3);
+  destroy_text_window_unload();
 }
 
 static void init() {
-  s_red1_text = (char*) malloc(5 * sizeof(char));
-  s_red2_text = (char*) malloc(5 * sizeof(char));
-  s_red3_text = (char*) malloc(5 * sizeof(char));
-  s_blue1_text = (char*) malloc(5 * sizeof(char));
-  s_blue2_text = (char*) malloc(5 * sizeof(char));
-  s_blue3_text = (char*) malloc(5 * sizeof(char));
-  s_source_code_pro = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_SOURCE_CODE_PRO_REG_38));
+  setup_text_init();
   s_main_window = window_create();
   window_set_window_handlers(s_main_window, (WindowHandlers) {
     .load = main_window_load,
@@ -355,14 +183,8 @@ static void init() {
 
 static void deinit() {
   window_destroy(s_main_window);
-  fonts_unload_custom_font(s_source_code_pro);
   app_message_deregister_callbacks();
-  free(s_red1_text);
-  free(s_red2_text);
-  free(s_red3_text);
-  free(s_blue1_text);
-  free(s_blue2_text);
-  free(s_blue3_text);
+  destroy_text_init();
 }
 
 int main() {

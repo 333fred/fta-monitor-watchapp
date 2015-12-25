@@ -16,6 +16,12 @@
     "resources": {
         "media": [
             {
+                "characterRegex": "[0-9]",
+                "file": "fonts/SourceCodePro-Small.ttf",
+                "name": "SOURCE_CODE_PRO_REG_28",
+                "type": "font"
+            },
+            {
                 "file": "images/FIRSTicon_RGB.png",
                 "menuIcon": true,
                 "name": "main_icon_image",
