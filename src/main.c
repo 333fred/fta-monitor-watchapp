@@ -51,13 +51,12 @@ status_type s_red3_status = 0;
 status_type s_blue1_status = 0;
 status_type s_blue2_status = 0;
 status_type s_blue3_status = 0;
- // Callback for receiving a message static void inbox_received_callback(DictionaryIterator *iter, void *ctx) {
-  APP_LOG(APP_LOG_LEVEL_INFO, "In Callback");
+ // Callback for receiving a message 
+static void inbox_received_callback(DictionaryIterator *iter, void *ctx) {
   Tuple *t = dict_read_first(iter);
   while (t != NULL) {
     CHECK_TYPE(t->type, t->length)
     uint32_t status = t->value->uint32;
-    APP_LOG(APP_LOG_LEVEL_INFO, "Processing message %d", (int) status);
     switch (t->key) {
       case RED1_STATUS:
       s_red1_status = (status_type) status;

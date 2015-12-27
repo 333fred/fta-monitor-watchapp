@@ -255,7 +255,7 @@ void setup_text_init() {
   s_blue2_text = (char*) malloc(6 * sizeof(char));
   s_blue3_text = (char*) malloc(6 * sizeof(char));
   s_source_code_pro = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_SOURCE_CODE_PRO_REG_38));
-  s_source_code_pro_number = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_SOURCE_CODE_PRO_REG_28));
+  s_source_code_pro_number = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_SOURCE_CODE_PRO_REG_24));
 }
 
 void destroy_text_init() {
