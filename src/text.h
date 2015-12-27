@@ -2,6 +2,10 @@
 #include <pebble.h>
 #include "utility.h"
 
+typedef enum {
+  SHOW_STATUS, SHOW_NUMBERS, SHOW_BATTERY
+} show_type;
+
 void setup_text_init();
 void destroy_text_init();
 void setup_text_window_load(Layer *window);

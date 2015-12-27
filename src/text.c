@@ -29,7 +29,13 @@ extern int s_red3_num;
 extern int s_blue1_num;
 extern int s_blue2_num;
 extern int s_blue3_num;
-extern int s_show_team_nums;
+extern int s_red1_battery;
+extern int s_red2_battery;
+extern int s_red3_battery;
+extern int s_blue1_battery;
+extern int s_blue2_battery;
+extern int s_blue3_battery;
+extern show_type s_show_type;
 
 extern status_type s_red1_status;
 extern status_type s_red2_status;
@@ -44,7 +50,16 @@ const char *eth = "Eth", *ds = "DS", *radio = "Rd", *rio = "RIO", *code = "Cd", 
 // Updates the text on the screen with the current values. It uses the correct display whether
 // the current update type is status or team number.
 void update_text() {
-  if (s_show_team_nums) {
+  switch (s_show_type) {
+    case SHOW_STATUS:
+    set_alliance_status(s_red1_status, 1, 1);
+    set_alliance_status(s_red2_status, 1, 2);
+    set_alliance_status(s_red3_status, 1, 3);
+    set_alliance_status(s_blue1_status, 2, 1);
+    set_alliance_status(s_blue2_status, 2, 2);
+    set_alliance_status(s_blue3_status, 2, 3);
+    break;
+    case SHOW_NUMBERS:
     snprintf(s_red1_text, 5, "%d", s_red1_num);
     snprintf(s_red2_text, 5, "%d", s_red2_num);
     snprintf(s_red3_text, 5, "%d", s_red3_num);
@@ -57,13 +72,21 @@ void update_text() {
     set_alliance_text(s_blue1_text, false, 2, 1, true);
     set_alliance_text(s_blue2_text, false, 2, 2, true);
     set_alliance_text(s_blue3_text, false, 2, 3, true);
-  } else {
-    set_alliance_status(s_red1_status, 1, 1);
-    set_alliance_status(s_red2_status, 1, 2);
-    set_alliance_status(s_red3_status, 1, 3);
-    set_alliance_status(s_blue1_status, 2, 1);
-    set_alliance_status(s_blue2_status, 2, 2);
-    set_alliance_status(s_blue3_status, 2, 3);
+    break;
+    case SHOW_BATTERY:
+    snprintf(s_red1_text, 6, "%d.%d", s_red1_battery / 100, s_red1_battery % 100);
+    snprintf(s_red2_text, 6, "%d.%d", s_red2_battery / 100, s_red2_battery % 100);
+    snprintf(s_red3_text, 6, "%d.%d", s_red3_battery / 100, s_red3_battery % 100);
+    snprintf(s_blue1_text, 6, "%d.%d", s_blue1_battery / 100, s_blue1_battery % 100);
+    snprintf(s_blue2_text, 6, "%d.%d", s_blue2_battery / 100, s_blue2_battery % 100);
+    snprintf(s_blue3_text, 6, "%d.%d", s_blue3_battery / 100, s_blue3_battery % 100);
+    set_alliance_text(s_red1_text, false, 1, 1, true);
+    set_alliance_text(s_red2_text, false, 1, 2, true);
+    set_alliance_text(s_red3_text, false, 1, 3, true);
+    set_alliance_text(s_blue1_text, false, 2, 1, true);
+    set_alliance_text(s_blue2_text, false, 2, 2, true);
+    set_alliance_text(s_blue3_text, false, 2, 3, true);
+    break;
   }
 }
 
@@ -118,7 +141,7 @@ void set_alliance_status(status_type status, uint8_t alliance, uint8_t team) {
   // If the app has told us to vibrate, then vibrate
   const char* text = NULL;
   bool hi_contrast = false;
-  if (s_show_team_nums) return;
+  if (s_show_type != SHOW_STATUS) return;
   switch (status) {
     case ETH:
     text = eth;
@@ -216,15 +239,21 @@ void destroy_text_window_unload() {
   text_layer_destroy(s_blue1);
   text_layer_destroy(s_blue2);
   text_layer_destroy(s_blue3);
+  text_layer_destroy(s_red1_number);
+  text_layer_destroy(s_red2_number);
+  text_layer_destroy(s_red3_number);
+  text_layer_destroy(s_blue1_number);
+  text_layer_destroy(s_blue2_number);
+  text_layer_destroy(s_blue3_number);
 }
 
 void setup_text_init() {
-  s_red1_text = (char*) malloc(5 * sizeof(char));
-  s_red2_text = (char*) malloc(5 * sizeof(char));
-  s_red3_text = (char*) malloc(5 * sizeof(char));
-  s_blue1_text = (char*) malloc(5 * sizeof(char));
-  s_blue2_text = (char*) malloc(5 * sizeof(char));
-  s_blue3_text = (char*) malloc(5 * sizeof(char));
+  s_red1_text = (char*) malloc(6 * sizeof(char));
+  s_red2_text = (char*) malloc(6 * sizeof(char));
+  s_red3_text = (char*) malloc(6 * sizeof(char));
+  s_blue1_text = (char*) malloc(6 * sizeof(char));
+  s_blue2_text = (char*) malloc(6 * sizeof(char));
+  s_blue3_text = (char*) malloc(6 * sizeof(char));
   s_source_code_pro = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_SOURCE_CODE_PRO_REG_38));
   s_source_code_pro_number = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_SOURCE_CODE_PRO_REG_28));
 }

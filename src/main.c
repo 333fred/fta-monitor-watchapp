@@ -1,4 +1,5 @@
 #include <pebble.h>
+#include <inttypes.h>
 #include "utility.h"
 #include "text.h"
   
@@ -16,6 +17,12 @@
 #define BLUE1_NUMBER 12
 #define BLUE2_NUMBER 13
 #define BLUE3_NUMBER 14
+#define RED1_BATT 15
+#define RED2_BATT 16
+#define RED3_BATT 17
+#define BLUE1_BATT 18
+#define BLUE2_BATT 19
+#define BLUE3_BATT 20
 #define CHECK_TYPE(type, size) if (type != TUPLE_UINT && size != 1) { \
         APP_LOG(APP_LOG_LEVEL_ERROR, "Received nonuint type %d", (int) type); \
         t = dict_read_next(iter); \
@@ -30,7 +37,13 @@ int s_red3_num = 6;
 int s_blue1_num = 1;
 int s_blue2_num = 2;
 int s_blue3_num = 3;
-int s_show_team_nums = 0;
+int s_red1_battery = 0;
+int s_red2_battery = 0;
+int s_red3_battery = 0;
+int s_blue1_battery = 0;
+int s_blue2_battery = 0;
+int s_blue3_battery = 0;
+show_type s_show_type = SHOW_STATUS;
 
 status_type s_red1_status = 0;
 status_type s_red2_status = 0;
@@ -38,13 +51,13 @@ status_type s_red3_status = 0;
 status_type s_blue1_status = 0;
 status_type s_blue2_status = 0;
 status_type s_blue3_status = 0;
-
-// Callback for receiving a message
-static void inbox_received_callback(DictionaryIterator *iter, void *ctx) {
+ // Callback for receiving a message static void inbox_received_callback(DictionaryIterator *iter, void *ctx) {
+  APP_LOG(APP_LOG_LEVEL_INFO, "In Callback");
   Tuple *t = dict_read_first(iter);
   while (t != NULL) {
     CHECK_TYPE(t->type, t->length)
     uint32_t status = t->value->uint32;
+    APP_LOG(APP_LOG_LEVEL_INFO, "Processing message %d", (int) status);
     switch (t->key) {
       case RED1_STATUS:
       s_red1_status = (status_type) status;
@@ -85,6 +98,24 @@ static void inbox_received_callback(DictionaryIterator *iter, void *ctx) {
       case BLUE3_NUMBER:
       s_blue3_num = status;
       break;
+      case RED1_BATT:
+      s_red1_battery = status;
+      break;
+      case RED2_BATT:
+      s_red2_battery = status;
+      break;
+      case RED3_BATT:
+      s_red3_battery = status;
+      break;
+      case BLUE1_BATT:
+      s_blue1_battery = status;
+      break;
+      case BLUE2_BATT:
+      s_blue2_battery = status;
+      break;
+      case BLUE3_BATT:
+      s_blue3_battery = status;
+      break;
     }
     
     t = dict_read_next(iter);
@@ -102,7 +133,6 @@ void request_update() {
 
 // Single click callback
 void select_single_click_handler(ClickRecognizerRef recognizer, void *context) {
-  APP_LOG(APP_LOG_LEVEL_INFO, "In single click handler");
   request_update();
 }
 
@@ -132,7 +162,12 @@ static void canvas_update_proc(Layer *this_layer, GContext *ctx) {
 
 // Down click handler - shows the team numbers for 3 seconds.
 static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
-  s_show_team_nums = !s_show_team_nums;
+  s_show_type = s_show_type == SHOW_NUMBERS ? SHOW_STATUS : SHOW_NUMBERS;
+  update_text();
+}
+
+static void up_click_handler(ClickRecognizerRef recognizer, void *context) {
+  s_show_type = s_show_type == SHOW_BATTERY ? SHOW_STATUS : SHOW_BATTERY;
   update_text();
 }
 
@@ -140,6 +175,7 @@ static void down_click_handler(ClickRecognizerRef recognizer, void *context) {
 void config_provider(Window *window) {
   window_single_click_subscribe(BUTTON_ID_SELECT, select_single_click_handler);
   window_single_click_subscribe(BUTTON_ID_DOWN, down_click_handler);
+  window_single_click_subscribe(BUTTON_ID_UP, up_click_handler);
 }
 
 static void main_window_load(Window *window) {
