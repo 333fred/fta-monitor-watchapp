@@ -45,7 +45,7 @@ extern status_type s_blue2_status;
 extern status_type s_blue3_status;
   
 // Constant text strings for the connection statuses
-const char *eth = "Eth", *ds = "DS", *radio = "Rd", *rio = "RIO", *code = "Cd", *estop = "Est", *good = "G", *bwu = "BWU", *byp = "BYP";
+const char *eth = "Eth", *ds = "DS", *radio = "Rd", *rio = "RIO", *code = "Cd", *estop = "Est", *good = "G", *bwu = "BWU", *byp = "BYP", *bat = "Bat";
 
 // Updates the text on the screen with the current values. It uses the correct display whether
 // the current update type is status or team number.
@@ -179,6 +179,10 @@ void set_alliance_status(status_type status, uint8_t alliance, uint8_t team) {
     text = byp;
     hi_contrast = false;
     break;
+    case BAT:
+    text = bat;
+    hi_contrast = true;
+    break;
   }
   set_alliance_text(text, hi_contrast, alliance, team, false);
 }
@@ -208,16 +212,16 @@ void setup_text_window_load(Layer *window_layer) {
   layer_add_child(window_layer, text_layer_get_layer(s_blue_header));
   
   // Create the layers for the different alliance statuses
-  setup_alliance_textlayer(&s_red1, window_layer, 74, 112, s_source_code_pro);
-  setup_alliance_textlayer(&s_red2, window_layer, 74, 66, s_source_code_pro);
-  setup_alliance_textlayer(&s_red3, window_layer, 74, 20, s_source_code_pro);
+  setup_alliance_textlayer(&s_red1, window_layer, 73, 112, s_source_code_pro);
+  setup_alliance_textlayer(&s_red2, window_layer, 73, 66, s_source_code_pro);
+  setup_alliance_textlayer(&s_red3, window_layer, 73, 20, s_source_code_pro);
   setup_alliance_textlayer(&s_blue1, window_layer, 0, 20, s_source_code_pro);
   setup_alliance_textlayer(&s_blue2, window_layer, 0, 66, s_source_code_pro);
   setup_alliance_textlayer(&s_blue3, window_layer, 0, 112, s_source_code_pro);
   
-  setup_alliance_textlayer(&s_red1_number, window_layer, 74, 112, s_source_code_pro_number);
-  setup_alliance_textlayer(&s_red2_number, window_layer, 74, 66, s_source_code_pro_number);
-  setup_alliance_textlayer(&s_red3_number, window_layer, 74, 20, s_source_code_pro_number);
+  setup_alliance_textlayer(&s_red1_number, window_layer, 73, 112, s_source_code_pro_number);
+  setup_alliance_textlayer(&s_red2_number, window_layer, 73, 66, s_source_code_pro_number);
+  setup_alliance_textlayer(&s_red3_number, window_layer, 73, 20, s_source_code_pro_number);
   setup_alliance_textlayer(&s_blue1_number, window_layer, 0, 20, s_source_code_pro_number);
   setup_alliance_textlayer(&s_blue2_number, window_layer, 0, 66, s_source_code_pro_number);
   setup_alliance_textlayer(&s_blue3_number, window_layer, 0, 112, s_source_code_pro_number);
