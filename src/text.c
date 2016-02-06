@@ -14,8 +14,11 @@ static TextLayer *s_red3_number;
 static TextLayer *s_blue1_number;
 static TextLayer *s_blue2_number;
 static TextLayer *s_blue3_number;
+static TextLayer *s_match_state_header;
+static TextLayer *s_match_state_layer;
 static GFont *s_source_code_pro;
 static GFont *s_source_code_pro_number;
+static GFont *s_roboto_condensed;
 static char *s_red1_text;
 static char *s_red2_text;
 static char *s_red3_text;
@@ -43,9 +46,14 @@ extern status_type s_red3_status;
 extern status_type s_blue1_status;
 extern status_type s_blue2_status;
 extern status_type s_blue3_status;
+
+extern match_state s_match_state;
   
 // Constant text strings for the connection statuses
 const char *eth = "Eth", *ds = "DS", *radio = "Rd", *rio = "RIO", *code = "Cd", *estop = "Est", *good = "G", *bwu = "BWU", *byp = "BYP", *bat = "Bat";
+const char *not_ready = "Not Ready", *timeout = "Time out", *ready_prestart = "Ready to Prestart", *prestart_initiated = "Prestart Initiated",
+           *prestart_complete = "Prestart Completed", *match_ready = "Match Ready", *auto_mode = "Auto Running", *teleop_mode = "Teleop Running", *over = "Over",
+           *aborted = "Aborted";
 
 // Updates the text on the screen with the current values. It uses the correct display whether
 // the current update type is status or team number.
@@ -87,45 +95,98 @@ void update_text() {
     set_alliance_text(s_blue2_text, false, 2, 2, true);
     set_alliance_text(s_blue3_text, false, 2, 3, true);
     break;
+    case SHOW_MATCH_STATUS:
+    update_match_status();
+    break;
   }
+  update_visibility();
+}
+
+void update_visibility() {
+  layer_set_hidden((Layer*) s_match_state_layer, s_show_type != SHOW_MATCH_STATUS);
+  layer_set_hidden((Layer*) s_match_state_header, s_show_type != SHOW_MATCH_STATUS);
+  layer_set_hidden((Layer*) s_red_header, s_show_type == SHOW_MATCH_STATUS);
+  layer_set_hidden((Layer*) s_blue_header, s_show_type == SHOW_MATCH_STATUS);
+  layer_set_hidden((Layer*) s_blue1, s_show_type != SHOW_STATUS);
+  layer_set_hidden((Layer*) s_blue2, s_show_type != SHOW_STATUS);
+  layer_set_hidden((Layer*) s_blue3, s_show_type != SHOW_STATUS);
+  layer_set_hidden((Layer*) s_red1, s_show_type != SHOW_STATUS);
+  layer_set_hidden((Layer*) s_red2, s_show_type != SHOW_STATUS);
+  layer_set_hidden((Layer*) s_red3, s_show_type != SHOW_STATUS);
+  layer_set_hidden((Layer*) s_blue1_number, s_show_type != SHOW_BATTERY && s_show_type != SHOW_NUMBERS);
+  layer_set_hidden((Layer*) s_blue2_number, s_show_type != SHOW_BATTERY && s_show_type != SHOW_NUMBERS);
+  layer_set_hidden((Layer*) s_blue3_number, s_show_type != SHOW_BATTERY && s_show_type != SHOW_NUMBERS);
+  layer_set_hidden((Layer*) s_red1_number, s_show_type != SHOW_BATTERY && s_show_type != SHOW_NUMBERS);
+  layer_set_hidden((Layer*) s_red2_number, s_show_type != SHOW_BATTERY && s_show_type != SHOW_NUMBERS);
+  layer_set_hidden((Layer*) s_red3_number, s_show_type != SHOW_BATTERY && s_show_type != SHOW_NUMBERS);
+}
+
+void update_match_status() {
+  const char* match_text;
+  switch (s_match_state) {
+    case NOT_READY:
+    match_text = not_ready;
+    break;
+    case READY_PRESTART:
+    match_text = ready_prestart;
+    break;
+    case PRESTART_INITATED:
+    match_text = prestart_initiated;
+    break;
+    case PRESTART_COMPLETED:
+    match_text = prestart_complete;
+    break;
+    case MATCH_READY:
+    match_text = match_ready;
+    break;
+    case AUTO:
+    match_text = auto_mode;
+    break;
+    case TELEOP:
+    match_text = teleop_mode;
+    break;
+    case OVER:
+    match_text = over;
+    break;
+    case TIMEOUT:
+    match_text = timeout;
+    break;
+    case ABORTED:
+    default:
+    match_text = aborted;
+    break;
+  }
+  
+  text_layer_set_text(s_match_state_layer, match_text);
 }
 
 // Sets the alliance text to be the given text string for the given alliance and team.
 void set_alliance_text(const char *text, bool hi_contrast, uint8_t alliance, uint8_t team, bool useNumber) {
   uint16_t switch_mult = (alliance << 8) | team;
   TextLayer *team_layer;
-  TextLayer *invisible_layer;
   switch (switch_mult) {
     case 0x0101:
     team_layer = useNumber ? s_red1_number : s_red1;
-    invisible_layer = !useNumber ? s_red1_number : s_red1;
     break;
     case 0x0102:
     team_layer = useNumber ? s_red2_number : s_red2;
-    invisible_layer = !useNumber ? s_red2_number : s_red2;
     break;
     case 0x0103:
     team_layer = useNumber ? s_red3_number : s_red3;
-    invisible_layer = !useNumber ? s_red3_number : s_red3;
     break;
     case 0x0201:
     team_layer = useNumber ? s_blue1_number : s_blue1;
-    invisible_layer = !useNumber ? s_blue1_number : s_blue1;
     break;
     case 0x0202:
     team_layer = useNumber ? s_blue2_number : s_blue2;
-    invisible_layer = !useNumber ? s_blue2_number : s_blue2;
     break;
     case 0x0203:
     team_layer = useNumber ? s_blue3_number : s_blue3;
-    invisible_layer = !useNumber ? s_blue3_number : s_blue3;
     break;
     default:
     return;
   }
  
-  layer_set_hidden((Layer *) team_layer, false);
-  layer_set_hidden((Layer *) invisible_layer, true);
   text_layer_set_text(team_layer, text);
   if (hi_contrast) {
     text_layer_set_background_color(team_layer, GColorBlack);
@@ -226,12 +287,27 @@ void setup_text_window_load(Layer *window_layer) {
   setup_alliance_textlayer(&s_blue2_number, window_layer, 0, 66, s_source_code_pro_number);
   setup_alliance_textlayer(&s_blue3_number, window_layer, 0, 112, s_source_code_pro_number);
   
+  s_match_state_header = text_layer_create(GRect(0, 0, 144, 20));
+  s_match_state_layer = text_layer_create(GRect(0, 20, 144, 148));
+  text_layer_set_text_alignment(s_match_state_header, GTextAlignmentCenter);
+  text_layer_set_text_alignment(s_match_state_layer, GTextAlignmentCenter);
+  text_layer_set_overflow_mode(s_match_state_layer, GTextOverflowModeWordWrap);
+  text_layer_set_font(s_match_state_layer, fonts_get_system_font(FONT_KEY_GOTHIC_18_BOLD));
+  text_layer_set_font(s_match_state_layer, s_roboto_condensed);
+  text_layer_set_text(s_match_state_header, "Match Status");
+  layer_add_child(window_layer, text_layer_get_layer(s_match_state_header));
+  layer_add_child(window_layer, text_layer_get_layer(s_match_state_layer));
+  
   set_alliance_status(ETH, 1, 1);
   set_alliance_status(ETH, 1, 2);
   set_alliance_status(ETH, 1, 3);
   set_alliance_status(ETH, 2, 1);
   set_alliance_status(ETH, 2, 2);
   set_alliance_status(ETH, 2, 3);
+  s_match_state = NOT_READY;
+  s_show_type = SHOW_STATUS;
+  update_match_status();
+  update_visibility();
 }
 
 void destroy_text_window_unload() {
@@ -249,6 +325,8 @@ void destroy_text_window_unload() {
   text_layer_destroy(s_blue1_number);
   text_layer_destroy(s_blue2_number);
   text_layer_destroy(s_blue3_number);
+  text_layer_destroy(s_match_state_layer);
+  text_layer_destroy(s_match_state_header);
 }
 
 void setup_text_init() {
@@ -260,11 +338,13 @@ void setup_text_init() {
   s_blue3_text = (char*) malloc(6 * sizeof(char));
   s_source_code_pro = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_SOURCE_CODE_PRO_REG_38));
   s_source_code_pro_number = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_SOURCE_CODE_PRO_REG_24));
+  s_roboto_condensed = fonts_load_custom_font(resource_get_handle(RESOURCE_ID_ROBOTO_CONDENSED_BOLD_38));
 }
 
 void destroy_text_init() {
   fonts_unload_custom_font(s_source_code_pro);
   fonts_unload_custom_font(s_source_code_pro_number);
+  fonts_unload_custom_font(s_roboto_condensed);
   free(s_red1_text);
   free(s_red2_text);
   free(s_red3_text);

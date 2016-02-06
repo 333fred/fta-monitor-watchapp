@@ -23,6 +23,7 @@
 #define BLUE1_BATT 18
 #define BLUE2_BATT 19
 #define BLUE3_BATT 20
+#define MATCH_STATE 21
 #define CHECK_TYPE(type, size) if (type != TUPLE_UINT && size != 1) { \
         APP_LOG(APP_LOG_LEVEL_ERROR, "Received nonuint type %d", (int) type); \
         t = dict_read_next(iter); \
@@ -43,6 +44,7 @@ int s_red3_battery = 0;
 int s_blue1_battery = 0;
 int s_blue2_battery = 0;
 int s_blue3_battery = 0;
+match_state s_match_state = NOT_READY;
 show_type s_show_type = SHOW_STATUS;
 
 status_type s_red1_status = 0;
@@ -115,6 +117,9 @@ static void inbox_received_callback(DictionaryIterator *iter, void *ctx) {
       case BLUE3_BATT:
       s_blue3_battery = status;
       break;
+      case MATCH_STATE:
+      s_match_state = (match_state) status;
+      break;
     }
     
     t = dict_read_next(iter);
@@ -132,7 +137,8 @@ void request_update() {
 
 // Single click callback
 void select_single_click_handler(ClickRecognizerRef recognizer, void *context) {
-  request_update();
+  s_show_type = s_show_type == SHOW_MATCH_STATUS ? SHOW_STATUS : SHOW_MATCH_STATUS;
+  update_text();
 }
 
 static void message_dropped_callback(AppMessageResult reason, void *ctx) {

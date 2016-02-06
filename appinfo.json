@@ -16,6 +16,12 @@
     "resources": {
         "media": [
             {
+                "characterRegex": "[A-Za-z0-9\\-]",
+                "file": "fonts/RobotoCondensed-Bold",
+                "name": "ROBOTO_CONDENSED_BOLD_38",
+                "type": "font"
+            },
+            {
                 "file": "images/FIRSTicon_RGB.png",
                 "menuIcon": true,
                 "name": "main_icon_image",
