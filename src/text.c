@@ -52,8 +52,8 @@ extern match_state s_match_state;
 // Constant text strings for the connection statuses
 const char *eth = "Eth", *ds = "DS", *radio = "Rd", *rio = "RIO", *code = "Cd", *estop = "Est", *good = "G", *bwu = "BWU", *byp = "BYP", *bat = "Bat";
 const char *not_ready = "Not Ready", *timeout = "Time out", *ready_prestart = "Ready to Prestart", *prestart_initiated = "Prestart Initiated",
-           *prestart_complete = "Prestart Completed", *match_ready = "Match Ready", *auto_mode = "Auto Running", *teleop_mode = "Teleop Running", *over = "Over",
-           *aborted = "Aborted";
+           *prestart_complete = "Prestart Completed", *match_ready = "Match Ready", *auto_mode = "Auto Running", *transition_mode = "Match Transition", 
+           *teleop_mode = "Teleop Running", *over = "Over", *aborted = "Aborted";
 
 // Updates the text on the screen with the current values. It uses the correct display whether
 // the current update type is status or team number.
@@ -142,6 +142,8 @@ void update_match_status() {
     case AUTO:
     match_text = auto_mode;
     break;
+    case TRANSITION:
+    match_text = transition_mode;
     case TELEOP:
     match_text = teleop_mode;
     break;
